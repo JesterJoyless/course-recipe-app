@@ -7,6 +7,8 @@ import { HeadersComponent } from './headers/headers.component';
 import { AppRoutingModule } from './app-routing.module';;
 import { SharedModule } from './shared/shared.module';
 import { CoreModule } from './core.module';
+import { StoreModule } from '@ngrx/store'
+import { shoppinglistReducer } from './store/shopping-list.reducer';
 
 
 
@@ -22,7 +24,8 @@ import { CoreModule } from './core.module';
     AppRoutingModule,
     HttpClientModule,
     SharedModule,
-    CoreModule
+    CoreModule,
+    StoreModule.forRoot({ shoppingList: shoppinglistReducer })
   ],
   providers: [],
   bootstrap: [AppComponent]
