@@ -1,3 +1,4 @@
+import { Store } from '@ngrx/store';
 import { environment } from './../../environments/environment';
 import { Router } from '@angular/router';
 import { UserModel } from './../shared/user.model';
@@ -6,6 +7,8 @@ import { Injectable } from '@angular/core';
 import { throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthResponseData } from '../shared/authResponce.model';
+import * as fromApp from '../store/app.reducer';
+import * as fromAuthActions from '../store/auth.action';
 
 
 
@@ -14,11 +17,16 @@ import { AuthResponseData } from '../shared/authResponce.model';
   providedIn: 'root'
 })
 export class AuthService {
-  user = new BehaviorSubject<UserModel>(null);
+  // user = new BehaviorSubject<UserModel>(null);
   private tokenExpires: any;
 
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private store: Store<fromApp.AppState>
+  ) { }
+
   signUp(email: string, password: string) {
     return this.http.post<AuthResponseData>('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + environment.firebaseAPIKey,
       {
@@ -48,10 +56,11 @@ export class AuthService {
       userData.email,
       userData.id,
       userData._token,
-      new Date(userData._tokenExpirationDate
-      ));
+      new Date(userData._tokenExpirationDate)
+    );
     if (loadedUser.token) {
-      this.user.next(loadedUser);
+      // this.user.next(loadedUser);
+      this.store.dispatch(new fromAuthActions.Login({ email: loadedUser.email, userID: loadedUser.id, token: loadedUser.token, expirationDate: new Date(userData._tokenExpirationDate) }));
       const expirationTimer = new Date(userData._tokenExpirationDate).getTime() - new Date().getTime();
       this.autoLogOut(expirationTimer);
     }
@@ -74,7 +83,8 @@ export class AuthService {
 
   }
   logOut() {
-    this.user.next(null);
+    //this.user.next(null);
+    this.store.dispatch(new fromAuthActions.Logout());
     this.router.navigate(['/auth']);
     localStorage.removeItem('userData');
     if (this.tokenExpires) {
@@ -98,13 +108,14 @@ export class AuthService {
       token,
       expirationDate);
 
-    this.user.next(user);
+    //this.user.next(user);
+    this.store.dispatch(new fromAuthActions.Login({ email: email, userID: userId, token: token, expirationDate: expirationDate }));
     this.autoLogOut(expiresIn * 1000);
     localStorage.setItem('userData', JSON.stringify(user));
   }
 
   private handleError(errorRes: HttpErrorResponse) {
-    let errorMessage = '';
+    let errorMessage = 'An Unknown Error Occured';
     console.log(errorRes.error.error.message);
     switch (errorRes.error.error.message) {
       case 'EMAIL_NOT_FOUND':

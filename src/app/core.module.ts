@@ -4,10 +4,10 @@ import { AuthInterceptor } from './interceptors/auth-interceptor.service';
 import { DataStorageService } from './services/data-storage.service';
 import { LoggingService } from './services/logging.service';
 import { RecipesService } from './services/recipes.service';
-import { ShoppingListService } from './services/shopping-list.service';
+
 @NgModule({
   providers: [
-    ShoppingListService,
+
     RecipesService,
     DataStorageService,
     {

@@ -5,12 +5,16 @@ import { Injectable } from '@angular/core';
 import { exhaustMap, map, take, tap } from 'rxjs/operators'
 import { Recipe } from '../recipes/recipes.model';
 import { RecipesService } from './recipes.service';
+import { Store } from '@ngrx/store';
+import * as fromApp from '../store/app.reducer'
 
 @Injectable()
 export class DataStorageService {
-  constructor(private http: HttpClient,
+  constructor(
+    private http: HttpClient,
     private recipeService: RecipesService,
-    private authService: AuthService) { }
+    private authService: AuthService,
+    private store: Store<fromApp.AppState>) { }
 
   storeRecipes() {
     const recipes = this.recipeService.getRecipes();
@@ -21,7 +25,7 @@ export class DataStorageService {
   }
 
   fetchRecipes() {
-    return this.authService.user.pipe(take(1),
+    return this.store.select('auth').pipe(take(1), map(authState => authState.user),
       exhaustMap(user => {
         return this.http.get<Recipe[]>('https://course-recipe-app-d3d3d-default-rtdb.asia-southeast1.firebasedatabase.app/recipes.json').pipe(map(recipes => {
           return recipes.map(recipe => {

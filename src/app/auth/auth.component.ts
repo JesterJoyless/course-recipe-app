@@ -7,6 +7,9 @@ import { Router } from '@angular/router';
 import { PlaceholderDirective } from '../shared/placeholder/placeholder.directive';
 import { AuthResponseData } from '../shared/authResponce.model';
 import { AlertComponent } from '../shared/alert/alert.component';
+import { Store } from '@ngrx/store';
+import * as fromApp from '../store/app.reducer'
+import * as AuthActions from '../store/auth.action'
 
 
 @Component({
@@ -24,10 +27,18 @@ export class AuthComponent implements OnInit, OnDestroy {
 
   constructor(private authService: AuthService,
     private router: Router,
-    private componentFactoryResolver: ComponentFactoryResolver) { }
+    private componentFactoryResolver: ComponentFactoryResolver,
+    private store: Store<fromApp.AppState>) { }
 
 
   ngOnInit(): void {
+    this.store.select('auth').subscribe(authState => {
+      this.isLoading = authState.loading;
+      this.error = authState.authError;
+      if (this.error) {
+        this.showErrorAlert(this.error);
+      }
+    })
   }
 
   onSwitchMode() {
@@ -49,22 +60,25 @@ export class AuthComponent implements OnInit, OnDestroy {
 
     if (this.isLoginMode) {
 
-      authObs = this.authService.loginIn(email, password);
+      // authObs = this.authService.loginIn(email, password);
+      this.store.dispatch(new AuthActions.LoginStart({ email: email, password: password }))
     } else {
 
       authObs = this.authService.signUp(email, password);
     }
-    authObs.subscribe(
-      resData => {
-        console.log(resData);
-        this.isLoading = false;
-        this.router.navigate(['/recipes']);
-      }, errorMessage => {
-        this.error = errorMessage;
-        this.showErrorAlert(this.error);
-        this.isLoading = false;
-      }
-    );
+
+
+    // authObs.subscribe(
+    //   resData => {
+    //     console.log(resData);
+    //     this.isLoading = false;
+    //     this.router.navigate(['/recipes']);
+    //   }, errorMessage => {
+    //     this.error = errorMessage;
+    //     this.showErrorAlert(this.error);
+    //     this.isLoading = false;
+    //   }
+    // );
     form.reset();
   }
 
